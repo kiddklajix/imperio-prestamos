@@ -19,7 +19,7 @@ def iniciar_db():
     conexion = sqlite3.connect(DB_NAME)
     cursor = conexion.cursor()
     
-    # TABLA 1: Usuarios (NUEVA 🔒)
+    # TABLA 1: Usuarios
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS usuarios (
             nombre TEXT PRIMARY KEY,
@@ -27,12 +27,13 @@ def iniciar_db():
         )
     """)
 
-    # TABLA 2: Préstamos
+    # TABLA 2: Préstamos (AHORA CON TELÉFONO 📱)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS prestamos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id TEXT,
             cliente TEXT,
+            telefono TEXT,  
             monto REAL,
             tasa REAL,
             plazo INTEGER,
@@ -68,12 +69,13 @@ class UsuarioModel(BaseModel):
 class PrestamoModel(BaseModel):
     usuario_id: str
     cliente: str
+    telefono: str  # <--- NUEVO CAMPO
     monto: float
     tasa: float
     plazo: int
     tipo_interes: str
 
-# --- RUTAS DE SEGURIDAD 👮‍♂️ ---
+# --- RUTAS DE SEGURIDAD ---
 
 @app.post("/registro")
 def registrar_usuario(usuario: UsuarioModel):
@@ -104,7 +106,7 @@ def login(usuario: UsuarioModel):
         
     return {"mensaje": "Login exitoso", "usuario": usuario.nombre}
 
-# --- RUTAS DEL SISTEMA (IGUAL QUE ANTES) ---
+# --- RUTAS DEL SISTEMA ---
 
 @app.post("/crear-prestamo")
 def crear(prestamo: PrestamoModel):
@@ -119,10 +121,11 @@ def crear(prestamo: PrestamoModel):
     conexion = sqlite3.connect(DB_NAME)
     cursor = conexion.cursor()
     
+    # AQUI GUARDAMOS EL TELEFONO TAMBIÉN
     cursor.execute("""
-        INSERT INTO prestamos (usuario_id, cliente, monto, tasa, plazo, tipo_interes, total_final, estado)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'Activo')
-    """, (prestamo.usuario_id, prestamo.cliente, prestamo.monto, prestamo.tasa, prestamo.plazo, prestamo.tipo_interes, round(total)))
+        INSERT INTO prestamos (usuario_id, cliente, telefono, monto, tasa, plazo, tipo_interes, total_final, estado)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Activo')
+    """, (prestamo.usuario_id, prestamo.cliente, prestamo.telefono, prestamo.monto, prestamo.tasa, prestamo.plazo, prestamo.tipo_interes, round(total)))
     id_prestamo = cursor.lastrowid
     
     for i in range(1, prestamo.plazo + 1):
