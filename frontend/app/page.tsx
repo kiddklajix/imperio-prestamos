@@ -7,7 +7,7 @@ const API_URL = "https://backend-imperio-mgux.onrender.com"; // <--- VERIFICA QU
 export default function Home() {
   const [usuario, setUsuario] = useState("");
   const [tempUsuario, setTempUsuario] = useState(""); 
-  const [password, setPassword] = useState(""); // <--- NUEVO
+  const [password, setPassword] = useState(""); 
   const [estaLogueado, setEstaLogueado] = useState(false);
 
   // Estados APP
@@ -71,6 +71,16 @@ export default function Home() {
   };
 
   // --- FUNCIONES DEL SISTEMA ---
+  
+  // 🔥 FUNCIÓN DE COBRANZA WHATSAPP 🔥
+  const cobrarPorWsp = (cliente: string, monto: number, total: number) => {
+    const mensaje = `Hola ${cliente} 👋. Te recuerdo que tienes un préstamo activo con nosotros.\n\n💰 Cuota pendiente: $${monto.toLocaleString()}\n📉 Deuda Total: $${total.toLocaleString()}\n\nPor favor regularizar a la brevedad. Atte, Imperio Financiero.`;
+    
+    // Esto abre WhatsApp automáticamente con el mensaje escrito
+    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, "_blank");
+  };
+
   const crearNuevo = async () => {
     if (!cliente || monto <= 0) return alert("Datos incorrectos");
     await fetch(`${API_URL}/crear-prestamo`, {
@@ -123,6 +133,7 @@ export default function Home() {
     );
   }
 
+  // --- PANTALLA PRINCIPAL ---
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8 font-sans">
       <div className="flex justify-between items-center mb-8 max-w-6xl mx-auto">
@@ -154,17 +165,41 @@ export default function Home() {
       <div className="max-w-6xl mx-auto space-y-4">
         {finanzas.map((p) => (
           <div key={p.id} className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+            
+            {/* CABECERA DEL PRÉSTAMO */}
             <div className="p-4 flex justify-between items-center bg-gray-800/50 border-b border-gray-700">
-              <div><h3 className="font-bold text-lg">{p.cliente}</h3><p className="text-xs text-gray-400">Prestado: ${p.monto.toLocaleString()} | Tasa: {p.tasa}%</p></div>
+              <div>
+                <h3 className="font-bold text-lg">{p.cliente}</h3>
+                <p className="text-xs text-gray-400">Prestado: ${p.monto.toLocaleString()} | Tasa: {p.tasa}%</p>
+              </div>
+              
               <div className="text-right flex items-center gap-4">
-                <div><p className="text-xl font-bold text-green-400">${p.total_final.toLocaleString()}</p><p className="text-[10px] text-gray-500">TOTAL</p></div>
-                <button onClick={() => saldarDeuda(p.id)} className="bg-green-600 hover:bg-green-500 text-white p-2 rounded-full shadow">💰</button>
+                <div>
+                    <p className="text-xl font-bold text-green-400">${p.total_final.toLocaleString()}</p>
+                    <p className="text-[10px] text-gray-500">TOTAL</p>
+                </div>
+                
+                {/* BOTONES DE ACCIÓN (WhatsApp + Pagar) */}
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => cobrarPorWsp(p.cliente, p.monto, p.total_final)}
+                    className="bg-green-500 hover:bg-green-400 text-white p-2 rounded-full shadow border border-green-300 transition-transform hover:scale-110"
+                    title="Cobrar por WhatsApp"
+                  >
+                    📱
+                  </button>
+                  
+                  <button onClick={() => saldarDeuda(p.id)} className="bg-yellow-600 hover:bg-yellow-500 text-white p-2 rounded-full shadow transition-transform hover:scale-110">💰</button>
+                </div>
+
               </div>
             </div>
+
+            {/* CUOTAS */}
             <div className="p-3 bg-gray-900/30 grid grid-cols-3 md:grid-cols-6 gap-2">
               {p.detalle_cuotas.map((c: any) => (
                 <div key={c.id} onClick={() => c.estado !== 'Pagada' && pagarCuota(c.id)} 
-                     className={`p-2 rounded text-center border text-xs cursor-pointer select-none ${c.estado === 'Pagada' ? 'bg-green-900/30 border-green-800 text-green-400' : 'bg-gray-700 border-gray-600 text-gray-300'}`}>
+                     className={`p-2 rounded text-center border text-xs cursor-pointer select-none transition-all ${c.estado === 'Pagada' ? 'bg-green-900/30 border-green-800 text-green-400' : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'}`}>
                   <p>Cuota {c.numero_cuota}</p><p className="font-bold">${c.monto_cuota.toLocaleString()}</p>
                 </div>
               ))}
