@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 
 // --- TU URL DE NGROK ---
-const API_URL = "https://collin-maieutic-overthickly.ngrok-free.dev";
+const API_URL = "https://backend-imperio-mgux.onrender.com";
 
 export default function Home() {
   // ESTADO DE SESIÓN
